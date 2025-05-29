@@ -1,4 +1,4 @@
-use tokio::io::copy_bidirectional;
+use tokio::io::{copy_bidirectional, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use anyhow::Result;
@@ -6,6 +6,7 @@ use anyhow::Result;
 pub async fn run_proxy(local_bind: String, forward_to: Arc<String>) -> Result<()> {
     let listener: TcpListener = TcpListener::bind(&local_bind).await?;
     println!("Proxy listening on {}", &local_bind);
+    println!("Proxy will redirect to {}", Arc::clone(&forward_to));
 
     loop {
         let (mut inbound, addr) = listener.accept().await?;
@@ -26,11 +27,22 @@ pub async fn run_proxy(local_bind: String, forward_to: Arc<String>) -> Result<()
                             );
                         }
 
-                        Err(e) => eprintln!("Relay error: {:?}", e)
+                        Err(e) => {
+                            eprintln!("Relay error: {:?}", e);
+                            eprintln!("Closing connection.");
+
+                            let _ = inbound.shutdown().await;
+                            let _ = outbound.shutdown().await;
+                        }
                     }
                 }
 
-                Err(e) => eprintln!("Failed to connect to target server: {:?}", e)
+                Err(e) => {
+                    eprintln!("Failed to connect to target server: {:?}", e);
+                    eprintln!("Closing connection.");
+
+                    let _ = inbound.shutdown().await;
+                }
             }
         });
     }
