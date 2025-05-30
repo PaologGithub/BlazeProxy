@@ -1,23 +1,27 @@
 use tokio::io::{copy_bidirectional, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use std::sync::Arc;
 use anyhow::Result;
 
-pub async fn run_proxy(local_bind: String, forward_to: Arc<String>) -> Result<()> {
+pub async fn run_proxy(local_bind: String, server: toml::Value) -> Result<()> {
+    let ip: String = server["ip"]
+        .as_str()
+        .expect(&format!("Error: Server with data {} has not a string for 'ip' value.", server))
+        .to_string();
+
     let listener: TcpListener = TcpListener::bind(&local_bind).await?;
     println!("Proxy listening on {}", &local_bind);
-    println!("Proxy will redirect to {}", Arc::clone(&forward_to));
+    println!("Proxy will redirect to {}", ip);
 
     loop {
         let (mut inbound, addr) = listener.accept().await?;
-        println! ("New connection from {}", addr);
+        println!("New connection from {}", addr);
 
-        let forward_to = Arc::clone(&forward_to);
+        let ip: String = ip.clone();
 
         tokio::spawn(async move {
-            match TcpStream::connect(&*forward_to).await {
+            match TcpStream::connect(ip).await {
                 Ok(mut outbound) => {
-                    println!("Connected to target server: {}", forward_to);
+                    println!("Connection to target server was successful.");
 
                     match copy_bidirectional(&mut inbound, &mut outbound).await {
                         Ok((from_client, from_server)) => {

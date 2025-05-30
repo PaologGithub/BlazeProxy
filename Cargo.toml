@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 # TCP Dependencies
-tokio = { version = "1", features = ["full"] }
-anyhow = "1.0"
+tokio = { version = "1.45.1", features = ["full"] }
+anyhow = "1.0.98"
 
 # Configuration dependencies
-serde = { version = "1", features = ["derive"] }
-toml = "0.8"
+serde = { version = "1.0.219", features = ["derive"] }
+toml = "0.8.22"
