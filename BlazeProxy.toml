@@ -1,5 +1,5 @@
-local_bind = "0.0.0.0:25565"       # Where does the BlazeProxy listen to
-default_server = "lobby"           # Default server to connect to
+local_bind = "0.0.0.0:25565"    # Where does the BlazeProxy listen to
+default_server = "lobby"        # Default server to connect to
 
 [servers]
 lobby = { ip = "127.0.0.1:10123" }
